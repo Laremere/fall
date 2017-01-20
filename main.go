@@ -30,6 +30,7 @@ func main() {
 		if si.Width < len(ident.Name)*7 {
 			si.Width = len(ident.Name) * 7
 		}
+		ident.Height = rowHeight - 3
 		ident.Y = si.Height
 		ident.Ytext = ident.Y + 13
 		si.Height += rowHeight
@@ -40,12 +41,13 @@ func main() {
 
 	for i, ident := range si.Listing {
 		ident.Index = i
+		ident.Color = positionToColor(ident.Index)
 
 		si.Width += ident.TimesImported * 3
 		ident.Vertical = si.Width - 2
 		ident.TopWidth = si.Width
 		ident.Xtext = si.Width - 10
-		si.Width += 3
+		si.Width += 10
 	}
 
 	for _, ident := range si.Listing {
@@ -53,9 +55,9 @@ func main() {
 		yspot := ident.Y + 2 + len(ident.Imports)*3 - 3
 		for _, dep := range ident.Imports {
 			si.Curves = append(si.Curves, DepCurve{
-				ident.TopWidth - 10,
+				ident.TopWidth,
 				yspot,
-				dep.Vertical - ident.TopWidth,
+				dep.Vertical - ident.TopWidth - 10,
 				dep.Y - yspot - 11,
 				positionToColor(dep.Index),
 			})
@@ -87,7 +89,10 @@ func main() {
 func positionToColor(pos int) string {
 	const goldenAngle = 137.508
 	angle := int(goldenAngle*float64(pos)) % 360
-	return fmt.Sprintf("hsl(%d, 75%%, 50%%)", angle)
+	if pos%5 == 0 {
+		//return fmt.Sprintf("hsl(%d, 75%%, 75%%)", angle)
+	}
+	return fmt.Sprintf("hsl(%d, 75%%, 30%%)", angle)
 }
 
 type SvgInfo struct {
@@ -114,6 +119,8 @@ type PkgImports struct {
 	TimesImported int
 	Vertical      int
 	Index         int
+	Height        int
+	Color         string
 }
 
 func (p *PkgImports) Len() int { return len(p.Imports) }
@@ -126,16 +133,17 @@ func (p *PkgImports) Less(i, j int) bool {
 
 const SvgTemplate = `
 <html>
-<body>
+<body style="background-color: #222222;">
 <svg height="{{.Height}}" width="{{.Width}}">
-<g font-size="15" font="sans-serif" fill="black" stroke="none">
+<rect width="{{.Width}}" height="{{.Height}}" fill="#222222"/>
 {{range .Listing}}
-	<text x="{{.Xtext}}" y="{{.Ytext}}" text-anchor="end">{{.Name}}</text>
+	<rect x="0" y="{{.Y}}" width="{{.TopWidth}}" height="{{.Height}}" fill="{{.Color}}"/>
+{{end}}
+<g font-size="15" font="sans-serif" fill="white" stroke="none" text-anchor="end">
+{{range .Listing}}
+	<text x="{{.Xtext}}" y="{{.Ytext}}">{{.Name}}</text>
 {{end}}
 </g>
-{{range .Listing}}
-	<path d="M 0 {{.Y}} h {{.TopWidth}}" stroke="blue" stroke-width="2" fill="none"/>
-{{end}}
 {{range .Curves}}
 	<path d="M {{.XStart}} {{.YStart}} h {{.Horizontal}} q 10 0 10 10 v {{.Vertical}}"
 	stroke="{{.Color}}" stroke-width="3" fill="none"/>

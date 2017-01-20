@@ -1,0 +1,8 @@
+overview first
+zoom and filter
+details on demand
+
+
+use Lab color space
+hide by repository
+search filter
