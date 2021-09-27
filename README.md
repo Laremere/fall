@@ -1,4 +1,4 @@
-fall
+Fall
 ====
 
-Dependency analysis tool for Go
+A fall graph visualizes directed acyclic graphs in a novel and comprehensible way.
