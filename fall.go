@@ -20,19 +20,19 @@ func Svg(w io.Writer, graph map[string][]string) error {
 }
 
 func Text(w io.Writer, graph map[string][]string) error {
-	return text(w, graph, func(int)string{return ""}, "")
+	return text(w, graph, func(int) string { return "" }, "")
 }
 
 // TODO: Needs to call into windows and set the terminal mode.
 func WinTerm(w io.Writer, graph map[string][]string) error {
-	return text(w, graph, winTermColor , "\x1B[[0m")
+	return text(w, graph, winTermColor, "\x1B[[0m")
 }
 
 func winTermColor(n int) string {
-	switch n%6 {
+	switch n % 6 {
 	case 0:
 		return "\x1B[[97m" // White
-	case 1: 
+	case 1:
 		return "\x1B[[91m" // Red
 	case 2:
 		return "\x1B[[92m" // Green
@@ -43,12 +43,12 @@ func winTermColor(n int) string {
 		return "\x1B[[95m" // Magenta
 	case 5:
 		fallthrough
-	 default:
+	default:
 		return "\x1B[[96m" // Cyan
 	}
 }
 
-func text(w io.Writer, graph map[string][]string, colorCode func(int)string, resetColor string) error {
+func text(w io.Writer, graph map[string][]string, colorCode func(int) string, resetColor string) error {
 	nodes, order, err := prepare(graph)
 	if err != nil {
 		return err
@@ -63,7 +63,7 @@ func text(w io.Writer, graph map[string][]string, colorCode func(int)string, res
 
 	colorCodeMap := make(map[string]string)
 	for i, name := range order {
-		colorCodeMap[name]=colorCode(i)
+		colorCodeMap[name] = colorCode(i)
 	}
 
 	shift := 0
@@ -157,7 +157,8 @@ func prepare(graph map[string][]string) (map[string]*node, []string, error) {
 
 	var best []string
 	var bestSum = math.MaxInt
-	for i := 0; i < 20; i++ {
+	var bestIndex = 0
+	for i := 0; (i < 100) || (i < bestIndex*2); i++ {
 		shuffle, err := randomOrder(r, nodes)
 		if err != nil {
 			return nil, nil, err
@@ -167,7 +168,10 @@ func prepare(graph map[string][]string) (map[string]*node, []string, error) {
 		if sum < bestSum {
 			bestSum = sum
 			best = shuffle
+			bestIndex = i
 		}
+		println(i)
+		println(bestIndex)
 	}
 
 	return nodes, best, nil
@@ -213,13 +217,17 @@ func randomOrder(r *rand.Rand, nodes map[string]*node) ([]string, error) {
 }
 
 func simplify(nodes map[string]*node, result []string) {
-	for k := 0; k < 10; k++ {
+	// for k := 0; k < 10; k++ {
+	change := true
+	for change {
+		change = false
 		for i := 0; i < len(result)-1; i++ {
 			ri := result[i]
 			rip := result[i+1]
 			_, cantswap := nodes[ri].to[rip]
 			if !cantswap && nodes[ri].balance > nodes[rip].balance {
 				result[i], result[i+1] = result[i+1], result[i]
+				change = true
 			}
 		}
 	}
