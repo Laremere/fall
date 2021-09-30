@@ -127,8 +127,6 @@ func prepare(graph map[string][]string) (map[string]*node, []string, error) {
 			best = shuffle
 			bestIndex = i
 		}
-		println(i)
-		println(bestIndex)
 	}
 
 	return nodes, best, nil
