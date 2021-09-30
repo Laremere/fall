@@ -20,35 +20,6 @@ func Svg(w io.Writer, graph map[string][]string) error {
 }
 
 func Text(w io.Writer, graph map[string][]string) error {
-	return text(w, graph, func(int) string { return "" }, "")
-}
-
-// TODO: Needs to call into windows and set the terminal mode.
-func WinTerm(w io.Writer, graph map[string][]string) error {
-	return text(w, graph, winTermColor, "\x1B[[0m")
-}
-
-func winTermColor(n int) string {
-	switch n % 6 {
-	case 0:
-		return "\x1B[[97m" // White
-	case 1:
-		return "\x1B[[91m" // Red
-	case 2:
-		return "\x1B[[92m" // Green
-	case 3:
-		return "\x1B[[93m" // Yellow
-		//Skipping blue because it's hard to read.
-	case 4:
-		return "\x1B[[95m" // Magenta
-	case 5:
-		fallthrough
-	default:
-		return "\x1B[[96m" // Cyan
-	}
-}
-
-func text(w io.Writer, graph map[string][]string, colorCode func(int) string, resetColor string) error {
 	nodes, order, err := prepare(graph)
 	if err != nil {
 		return err
@@ -59,11 +30,6 @@ func text(w io.Writer, graph map[string][]string, colorCode func(int) string, re
 			return
 		}
 		_, err = io.WriteString(w, s)
-	}
-
-	colorCodeMap := make(map[string]string)
-	for i, name := range order {
-		colorCodeMap[name] = colorCode(i)
 	}
 
 	shift := 0
@@ -87,25 +53,16 @@ func text(w io.Writer, graph map[string][]string, colorCode func(int) string, re
 			if tos > 0 {
 				if _, ok := nodes[name].to[other]; ok {
 					vert[other] = struct{}{}
-					write(colorCodeMap[name])
-					write("━")
-					write(resetColor)
-					write("█")
+					write("━█")
 					tos--
 				} else if _, ok := vert[other]; ok {
-					write(colorCodeMap[name])
 					write("━╋")
-					write(resetColor)
 				} else {
-					write(colorCodeMap[name])
 					write("━━")
-					write(resetColor)
 				}
 			} else {
 				if _, ok := vert[other]; ok {
-					write(colorCodeMap[other])
 					write(" ┃")
-					write(resetColor)
 				} else {
 					write("  ")
 				}
