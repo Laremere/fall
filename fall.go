@@ -3,6 +3,8 @@ package fall
 import (
 	"errors"
 	"io"
+	"fmt"
+	"strings"
 	"math"
 	"math/rand"
 )
@@ -86,6 +88,46 @@ func Text(w io.Writer, graph map[string][]string) error {
 		write("\n")
 		_ = nodes
 	}
+	return err
+}
+
+// Dot exports the graph format used elsewhere in this package in the DOT
+// format, so the same input can be used for comparison with other programs'
+// output.
+func Dot(w io.Writer, graph map[string][]string) error {
+	var err error
+	write := func(s string) {
+		if err != nil {
+			return
+		}
+		_, err = io.WriteString(w, s)
+	}
+
+	write("digraph {\n")
+	nodeNames := make(map[string]string, len(graph))
+	next := 0
+	for name := range graph {
+		nodeNames[name] = fmt.Sprintf("n%d", next)
+		next++
+		write("  ")
+		write(nodeNames[name])
+		write(" [label=\"")
+		write(strings.ReplaceAll(name, "\"", "\\\""))
+		write("\"];\n")
+	}
+
+	for from, edges := range graph {
+		for _, to := range edges {
+			write("  ")
+			write(nodeNames[from])
+			write(" -> ")
+			write(nodeNames[to])
+			write(";\n")
+		}
+	}
+
+	write("}\n")
+
 	return err
 }
 

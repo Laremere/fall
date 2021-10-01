@@ -36,4 +36,5 @@ func main() {
 	}
 
 	fall.Text(os.Stdout, dag)
+	fall.Dot(os.Stdout, dag)
 }
